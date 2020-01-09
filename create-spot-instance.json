@@ -1,0 +1,12 @@
+{
+	"SecurityGroupIds": [
+		"sg-049bd5244fce6f7db"
+	],
+	"IamInstanceProfile": {
+		"Arn": "arn:aws:iam::295417694464:instance-profile/ec2",
+		"Name": "ec2"
+	},
+	"ImageId": "ami-0122108aad5144107",
+	"InstanceType": "p2.xlarge",
+	"KeyName": "datasciencetutorial",
+}
