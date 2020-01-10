@@ -4,16 +4,26 @@ PRIVATE_KEY="datasciencetutorial.pem"
 DSSNAPSHOTID="snap-02056915e488e2a8e" #this is the snapshotid of the datascience volume to create
 IMAGEID="ami-0122108aad5144107" #this is the ami imageid to create instance from
 
-#create the spot instance at price with imageid in the json file
+#update json file with ImageId from above (incase we need to update image to be used
+jq --arg v "$IMAGEID" '.ImageId = $v' create-spot-instance.json > tmp.json
+mv tmp.json create-spot-instance.json
+
+#create the spot instance at price with imageid in the json file and save output to spot-instance-info.json
 aws ec2 request-spot-instances --spot-price 0.0288 --instance-count 1 --type one-time --launch-specification file://create-spot-instance.json > spot-instance-info.json
 
+#parse spot instance json file to get availability zone and instance id
+cat spot-instance-info.json | jq '.SpotInstanceRequests[0].LaunchSpecification.Placement.AvailibilityZone'
+cat spot-instance-info.json | jq '.SpotInstanceRequests[0].LaunchedAvailabilityZone'
+cat spot-instance-info.json | jq '.SpotInstanceRequests[0].InstanceId'
 
-#get public dns of instance for ssh later
-AWS=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --output text`
-#get availability zone of instance to know where to create volume later
-ZONE=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].Placement.AvailabilityZone' --output text`
 #get instanceid of machine
 INSTANCEID=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].InstanceId' --output text`
+#get public dns of instance for ssh later
+#AWS=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --output text`
+AWS=`aws ec2 describe-instances --instance-id $INSTANCEID --query 'Reservations[*].Instances[*].PublicDnsName' --output text`
+#get availability zone of instance to know where to create volume later
+#ZONE=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].Placement.AvailabilityZone' --output text`
+ZONE=`aws ec2 describe-instances --instance-id $INSTANCEID --query 'Reservations[*].Instances[*].Placement.AvailabilityZone' --output text`
 
 echo "AvailabilityZone: $ZONE"
 echo "InstanceId: $INSTANCEID"
