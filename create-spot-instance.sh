@@ -55,3 +55,6 @@ echo "New AMI ImageId: $AMIIMAGEID"
 aws ec2 deregister-image --image-id $IMAGEID
 #delete old volume snapshotid
 aws ec2 delete-snapshot --snapshot-id $DSSNAPSHOTID
+
+#terminate intance
+aws ec2 terminate-instances --instance-ids $INSTANCEID
