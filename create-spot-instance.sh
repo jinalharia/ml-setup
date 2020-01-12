@@ -9,15 +9,15 @@ jq --arg v "$IMAGEID" '.ImageId = $v' create-spot-instance.json > tmp.json
 mv tmp.json create-spot-instance.json
 
 #create the spot instance at price with imageid in the json file and save output to spot-instance-info.json
-aws ec2 request-spot-instances --spot-price 0.0288 --instance-count 1 --type one-time --launch-specification file://create-spot-instance.json > spot-instance-info.json
+aws ec2 request-spot-instances --spot-price 0.4 --instance-count 1 --type one-time --launch-specification file://create-spot-instance.json #> spot-instance-info.json
 
 #parse spot instance json file to get availability zone and instance id
-cat spot-instance-info.json | jq '.SpotInstanceRequests[0].LaunchSpecification.Placement.AvailibilityZone'
-cat spot-instance-info.json | jq '.SpotInstanceRequests[0].LaunchedAvailabilityZone'
-cat spot-instance-info.json | jq '.SpotInstanceRequests[0].InstanceId'
+#cat spot-instance-info.json | jq '.SpotInstanceRequests[0].LaunchSpecification.Placement.AvailibilityZone'
+#cat spot-instance-info.json | jq '.SpotInstanceRequests[0].LaunchedAvailabilityZone'
+#cat spot-instance-info.json | jq '.SpotInstanceRequests[0].InstanceId'
 
 #get instanceid of machine
-INSTANCEID=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].InstanceId' --output text`
+INSTANCEID=`aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" --query 'Reservations[*].Instances[*].InstanceId' --output text`
 #get public dns of instance for ssh later
 #AWS=`aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --output text`
 AWS=`aws ec2 describe-instances --instance-id $INSTANCEID --query 'Reservations[*].Instances[*].PublicDnsName' --output text`
@@ -38,7 +38,8 @@ echo "VolumeId: $VOLUMEID"
 aws ec2 attach-volume --volume-id $VOLUMEID --instance-id $INSTANCEID --device /dev/sdf
 
 echo "ssh-ing into $AWS"
-ssh -i $PRIVATE_KEY -L 8888:127.0.0.1:8888 -L 6006:localhost:6006 ubuntu@$AWS
+#ssh -i $PRIVATE_KEY -L 8888:127.0.0.1:8888 -L 6006:localhost:6006 ubuntu@$AWS
+ssh -i $PRIVATE_KEY ubuntu@$AWS
 
 #detach datascience volume once finished
 aws ec2 detach-volume --volume-id $VOLUMEID
